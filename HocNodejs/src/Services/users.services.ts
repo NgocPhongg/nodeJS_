@@ -4,7 +4,8 @@ import { RegisterReqbody } from '~/Models/requests/User.requests'
 import { hashPassword } from '~/Utils/crypto'
 import { signToken } from '~/Utils/jwt'
 import { TokenType } from '~/Constants/enums'
-import { promisify } from 'util'
+import ResFreshToken from '~/Models/Schemas/ResFreshToken.schema'
+import { ObjectId } from 'mongodb'
 
 class UsersService {
   private signAccessToken(user_id: string) {
@@ -30,7 +31,9 @@ class UsersService {
       }
     })
   }
-
+  private signAccsessAndResfreshToken(user_id: string) {
+    return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
+  }
   async register(payload: RegisterReqbody) {
     const result = await databaseservice.users.insertOne(
       new User({
@@ -40,10 +43,10 @@ class UsersService {
       })
     )
     const user_id = result.insertedId.toString()
-    const [accsess_token, refresh_token] = await Promise.all([
-      this.signAccessToken(user_id),
-      this.signRefreshToken(user_id)
-    ])
+    const [accsess_token, refresh_token] = await this.signAccsessAndResfreshToken(user_id)
+    await databaseservice.resFreshToken.insertOne(
+      new ResFreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
+    )
     return {
       accsess_token,
       refresh_token
@@ -54,7 +57,18 @@ class UsersService {
     console.log(user)
     return Boolean(user)
   }
+  async login(user_id: string) {
+    const [accsess_token, refresh_token] = await this.signAccsessAndResfreshToken(user_id)
+    await databaseservice.resFreshToken.insertOne(
+      new ResFreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
+    )
+    return {
+      accsess_token,
+      refresh_token
+    }
+  }
 }
+
 const usersService = new UsersService()
 export default usersService
 
@@ -77,3 +91,27 @@ export default usersService
 // }
 // const usersService = new UsersService()
 // export default usersService
+
+// async register(payload: RegisterReqbody) {
+//   const result = await databaseservice.users.insertOne(
+//     new User({
+//       ...payload,
+//       date_of_birth: new Date(payload.date_of_birth),
+//       password: hashPassword(payload.password)
+//     })
+//   )
+//   const user_id = result.insertedId.toString()
+//   const [accsess_token, refresh_token] = await Promise.all([
+//     this.signAccessToken(user_id),
+//     this.signRefreshToken(user_id)
+//   ])
+//   return {
+//     accsess_token,
+//     refresh_token
+//   }
+// }
+// async checkEmailExsit(email: string) {
+//   const user = await databaseservice.users.findOne({ email })
+//   console.log(user)
+//   return Boolean(user)
+// }

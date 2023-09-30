@@ -2,6 +2,8 @@ import { MongoClient, Db, Collection } from 'mongodb'
 // tải dotenv để config vào
 import { config } from 'dotenv'
 import User from '~/Models/Schemas/User.schema'
+import ResFreshToken from '~/Models/Schemas/ResFreshToken.schema'
+//khi nào có process.env thì phải gọi config()
 config()
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@atlascluster.eml4bmb.mongodb.net/?retryWrites=true&w=majority`
 class DatabaseService {
@@ -20,9 +22,11 @@ class DatabaseService {
       throw error
     }
   }
-
   get users(): Collection<User> {
     return this.db.collection(process.env.DB_USERS_COLECTION as string)
+  }
+  get resFreshToken(): Collection<ResFreshToken> {
+    return this.db.collection(process.env.DB_RESFRESHTOKEN_COLECTION as string)
   }
 }
 // run().catch(console.dir)

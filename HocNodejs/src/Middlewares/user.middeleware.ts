@@ -1,16 +1,46 @@
-import { Request, Response, NextFunction } from 'express'
 import { checkSchema } from 'express-validator'
+import databaseservice from '~/Services/database.services'
 import usersService from '~/Services/users.services'
 import { validate } from '~/Utils/validation'
-export const loginValidator = (req: Request, res: Response, next: NextFunction) => {
-  const { email, password } = req.body
-  if (!email || !password) {
-    return res.status(400).json({
-      error: 'missing email or password'
-    })
-  }
-  next()
-}
+export const loginValidator = validate(
+  checkSchema({
+    email: {
+      notEmpty: true,
+      isEmail: true,
+      trim: true,
+      custom: {
+        options: async (value, { req }) => {
+          const user = await databaseservice.users.findOne({ email: value })
+          if (user == null) {
+            throw new Error('Email user not found')
+          }
+          req.user = user
+          return true
+        }
+      }
+    },
+    password: {
+      notEmpty: true,
+      isString: true,
+      isLength: {
+        options: {
+          min: 6,
+          max: 50
+        }
+      },
+      isStrongPassword: {
+        options: {
+          minLength: 6,
+          minLowercase: 1,
+          minUppercase: 1,
+          minNumbers: 1,
+          minSymbols: 1
+        },
+        errorMessage: 'file password'
+      }
+    }
+  })
+)
 
 export const registerVadidator = validate(
   checkSchema({
@@ -33,7 +63,7 @@ export const registerVadidator = validate(
         options: async (value) => {
           const isResult = await usersService.checkEmailExsit(value)
           if (isResult) {
-            throw new Error('email đã tồn tại ')
+            throw new Error('Email already exists')
           }
           return true
         }
@@ -59,7 +89,7 @@ export const registerVadidator = validate(
         errorMessage: 'file password'
       }
     },
-    comfrim_password: {
+    confirm_password: {
       notEmpty: true,
       isString: true,
       isLength: {
@@ -97,3 +127,13 @@ export const registerVadidator = validate(
     }
   })
 )
+
+// export const loginValidator = (req: Request, res: Response, next: NextFunction) => {
+//   const { email, password } = req.body
+//   if (!email || !password) {
+//     return res.status(400).json({
+//       error: 'missing email or password'
+//     })
+//   }
+//   next()
+// }
