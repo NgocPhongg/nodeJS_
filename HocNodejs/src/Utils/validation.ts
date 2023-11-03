@@ -3,27 +3,32 @@ import { validationResult, ValidationChain } from 'express-validator'
 import { RunnableValidationChains } from 'express-validator/src/middlewares/schema'
 import HTTP_STATUS from '~/Constants/httpStatus'
 import { EntityError, ErrorWithStatus } from '~/Models/Errors'
-
 export const validate = (validation: RunnableValidationChains<ValidationChain>) => {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     await validation.run(req)
     const errors = validationResult(req)
-    //không có lỗi thì next tiếp tục request
+    // Không có lỗi thì next để tiếp tục request
     if (errors.isEmpty()) {
       return next()
     }
-    const errorsObject = errors.mapped() // nếu muốn hiện thị nhiều lỗi thì đổi thuộc tính đuôi mapped thành gì đó tự tìm
+
+    const errorsObject = errors.mapped()
     const entityError = new EntityError({ errors: {} })
     for (const key in errorsObject) {
       const { msg } = errorsObject[key]
-      // trả về lỗi không phải là do lỗi validation
-      if (msg instanceof ErrorWithStatus && msg.status != HTTP_STATUS.UNPROCESSABLIE_ENTITY) {
-        // errorsObject[key] = errorsObject[key].msg
+      // Trả về lỗi không phải là do lỗi validation
+      if (msg instanceof ErrorWithStatus && msg.status !== HTTP_STATUS.UNPROCESSABLIE_ENTITY) {
         return next(msg)
       }
-      entityError.errors[key] = errorsObject[key]
+      entityError.errors.messages = errorsObject[key].msg
     }
-    next(entityError)
+    // return res.status(HTTP_STATUS.UNPROCESSABLIE_ENTITY).json(entityError.errors)
+
+    // Trả về lỗi validation dưới dạng JSON
+    return res.json({
+      message: HTTP_STATUS.UNAUTHORIZED,
+      messages: entityError.errors.messages
+    })
   }
 }
 
