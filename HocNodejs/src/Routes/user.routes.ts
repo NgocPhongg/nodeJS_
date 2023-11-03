@@ -1,11 +1,40 @@
 import express from 'express'
-import { loginValidator, registerVadidator } from '~/Middlewares/user.middeleware'
-import { loginController, registerController } from '~/Controllers/user.controller'
+
+import {
+  accsessTokenValidator,
+  loginValidator,
+  registerVadidator,
+  refreshTokenValidator,
+  emailVerifyTokenValidator,
+  forgotPassWordValidator,
+  updateAdressValidator
+} from '~/Middlewares/user.middeleware'
+import {
+  emailVerifyController,
+  forgotPasswordController,
+  loginController,
+  logoutController,
+  meProfileController,
+  registerController,
+  resendEmailVerifyController,
+  updateMeController
+} from '~/Controllers/user.controller'
 
 import { wrapRequestHandler } from '~/Utils/handlers'
 const userRoutes = express.Router()
-
-userRoutes.post('/login', loginValidator, loginController)
+/**
+ * Description . login user
+ * path:/login
+ * Method: post
+ * Body:{email:string,passwordLstring}
+ */
+userRoutes.post('/login', loginValidator, wrapRequestHandler(loginController))
 userRoutes.post('/register', registerVadidator, wrapRequestHandler(registerController))
+userRoutes.post('/logout', accsessTokenValidator, refreshTokenValidator, wrapRequestHandler(logoutController))
+userRoutes.post('/verify-email', emailVerifyTokenValidator, wrapRequestHandler(emailVerifyController))
+userRoutes.post('/resend-verify-email', accsessTokenValidator, wrapRequestHandler(resendEmailVerifyController))
+userRoutes.post('/forgot-password', forgotPassWordValidator, wrapRequestHandler(forgotPasswordController))
+userRoutes.get('/me-profile', accsessTokenValidator, wrapRequestHandler(meProfileController))
+userRoutes.patch('/updateMe', accsessTokenValidator, updateAdressValidator, wrapRequestHandler(updateMeController))
 
 export default userRoutes

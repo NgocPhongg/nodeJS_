@@ -2,9 +2,16 @@ import express from 'express'
 import userRouter from './Routes/user.routes'
 import databaseservice from './Services/database.services'
 import { defaultErrorHandler } from './Middlewares/error.middleware'
-
-databaseservice.connect()
+import cors from 'cors'
 const app = express()
+
+app.use(
+  cors({
+    origin: '*',
+    credentials: true
+  })
+)
+databaseservice.connect()
 const port = 3000
 app.use(express.json())
 

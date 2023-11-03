@@ -1,6 +1,5 @@
 import { ObjectId } from 'mongodb'
 import { UserVerifyStatus } from '~/Constants/enums'
-
 interface UserType {
   _id?: ObjectId
   name: string
@@ -12,13 +11,14 @@ interface UserType {
   email_verify_token?: string // jwt hoặc '' nếu đã xác thực email
   forgot_password_token?: string // jwt hoặc '' nếu đã xác thực email
   verify?: UserVerifyStatus
-
   bio?: string // optional
   location?: string // optional
   website?: string // optional
   username?: string // optional
   avatar?: string // optional
   cover_photo?: string // optional
+  code?: string
+  phone?: string
 }
 export default class User {
   _id?: ObjectId
@@ -31,13 +31,14 @@ export default class User {
   email_verify_token: string // jwt hoặc '' nếu đã xác thực email
   forgot_password_token: string // jwt hoặc '' nếu đã xác thực email
   verify: UserVerifyStatus
-
   bio: string // optional
   location: string // optional
   website: string // optional
   username: string // optional
   avatar: string // optional
   cover_photo: string // optional
+  code: string
+  phone?: string
 
   constructor(user: UserType) {
     const date = new Date()
@@ -57,5 +58,7 @@ export default class User {
     this.username = user.username || ''
     this.avatar = user.avatar || ''
     this.cover_photo = user.cover_photo || ''
+    this.code = user.code || ''
+    this.phone = user.phone || ''
   }
 }
