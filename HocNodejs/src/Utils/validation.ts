@@ -22,13 +22,12 @@ export const validate = (validation: RunnableValidationChains<ValidationChain>) 
       }
       entityError.errors.messages = errorsObject[key].msg
     }
-    // return res.status(HTTP_STATUS.UNPROCESSABLIE_ENTITY).json(entityError.errors)
-
+    return res.status(HTTP_STATUS.UNPROCESSABLIE_ENTITY).json(entityError.errors)
     // Trả về lỗi validation dưới dạng JSON
-    return res.json({
-      message: HTTP_STATUS.UNAUTHORIZED,
-      messages: entityError.errors.messages
-    })
+    // return res.json({
+    //   status: HTTP_STATUS.UNAUTHORIZED,
+    //   message: entityError.errors.messages
+    // })
   }
 }
 

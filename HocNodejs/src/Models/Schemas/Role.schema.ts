@@ -1,17 +1,15 @@
 import { ObjectId } from 'mongodb'
 
 interface RoleType {
-  _id?: ObjectId
+  _id_role?: ObjectId
   name: string
-  user_id: ObjectId
 }
 export default class Role {
-  _id?: ObjectId
+  _id_role?: ObjectId
   name?: string
-  user_id?: ObjectId
   constructor(role: RoleType) {
-    this._id = role._id
+    this._id_role = role._id_role
     this.name = role.name
-    this.user_id = role.user_id
+
   }
 }

@@ -18,6 +18,10 @@ export interface RegisterReqbody {
 export interface LogoutRequestBody {
   refresh_token: string
 }
+export interface DeleteRequestBody {
+  _id: string
+}
+
 export interface TokenPayload extends JwtPayload {
   user_id: string
   token_type: TokenType
@@ -27,6 +31,10 @@ export interface EmailVerifyReqBody {
 }
 export interface ForgotPasswordReqBody {
   email: string
+}
+export interface SearchRequestBody {
+  name: string
+  award: string
 }
 // export interface UpdateAdressReqBody {
 //   province?: string
@@ -39,6 +47,7 @@ export interface ForgotPasswordReqBody {
 export interface UpdateMeReqBody {
   name?: string
   phone?: string
+  avatar?: string
 }
 export interface CreateAddress {
   _id: ObjectId
@@ -46,6 +55,5 @@ export interface CreateAddress {
   district?: string
   award?: string
   detail?: string
-  avatar?: string
   user_id: ObjectId
 }

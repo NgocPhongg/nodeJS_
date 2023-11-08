@@ -18,8 +18,6 @@ export default class Address {
   district: string
   award: string
   detail: string
-  phone: string
-  avata: string
   user_id: ObjectId
   constructor(address: AddressType) {
     this._id = address._id
@@ -27,8 +25,6 @@ export default class Address {
     this.district = address.district || ''
     this.award = address.award || ''
     this.detail = address.detail || ''
-    this.phone = address.phone || ''
-    this.avata = address.avata || ''
     this.user_id = address.user_id
     // this.name = address.name || ''
   }

@@ -11,6 +11,6 @@ export enum TokenType {
 }
 export enum RoleType {
   Admin = 'ADMIN',
-  User = 'USER',
+  customr = 'CUSTOMER',
   Shop = 'SHOP'
 }

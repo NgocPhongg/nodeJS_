@@ -9,7 +9,9 @@ import {
   EmailVerifyReqBody,
   ForgotPasswordReqBody,
   UpdateMeReqBody,
-  CreateAddress
+  CreateAddress,
+  DeleteRequestBody,
+  SearchRequestBody
 } from '~/Models/requests/User.requests'
 import usersService from '~/Services/users.services'
 import User from '~/Models/Schemas/User.schema'
@@ -40,6 +42,12 @@ export const registerController = async (req: Request<ParamsDictionary, any, Reg
 export const logoutController = async (req: Request<ParamsDictionary, any, LogoutRequestBody>, res: Response) => {
   const { refresh_token } = req.body
   const result = await usersService.logout(refresh_token)
+  return res.json(result)
+}
+export const deleteUserController = async (req: Request<ParamsDictionary, any, DeleteRequestBody>, res: Response) => {
+  const { _id } = req.body
+  const result = await usersService.deleteUser(_id)
+  console.log(res)
   return res.json(result)
 }
 export const emailVerifyController = async (
@@ -104,6 +112,14 @@ export const meProfileController = async (req: Request, res: Response, next: Nex
     data
   })
 }
+export const allMeProfileController = async (req: Request, res: Response, next: NextFunction) => {
+  const data = await usersService.allMeTable()
+  return res.json({
+    message: USERS_MESSAGES.GET_ME_SUCCSES,
+    status: HTTP_STATUS.OK,
+    data
+  })
+}
 export const updateMeController = async (
   req: Request<ParamsDictionary, any, CreateAddress, UpdateMeReqBody>,
   res: Response
@@ -114,6 +130,14 @@ export const updateMeController = async (
     message: USERS_MESSAGES.UPDATE_ME_SUCCSES,
     status: HTTP_STATUS.OK,
     user
+  })
+}
+export const searchUserController = async (req: Request<ParamsDictionary, any, SearchRequestBody>, res: Response) => {
+  const payload: SearchRequestBody = req.body
+  const data = await usersService.searchUser(payload)
+  return res.json({
+    status: HTTP_STATUS.OK,
+    data
   })
 }
 

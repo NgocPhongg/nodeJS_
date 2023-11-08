@@ -1,6 +1,6 @@
 import User from '~/Models/Schemas/User.schema'
 import databaseservice from './database.services'
-import { CreateAddress, RegisterReqbody, UpdateMeReqBody } from '~/Models/requests/User.requests'
+import { CreateAddress, RegisterReqbody, SearchRequestBody, UpdateMeReqBody } from '~/Models/requests/User.requests'
 import { hashPassword } from '~/Utils/crypto'
 import { signToken } from '~/Utils/jwt'
 import { RoleType, TokenType } from '~/Constants/enums'
@@ -9,9 +9,15 @@ import { ObjectId } from 'mongodb'
 import { USERS_MESSAGES } from '~/Constants/messages'
 import HTTP_STATUS from '~/Constants/httpStatus'
 import Address from '~/Models/Schemas/Address.schema'
-import { v4 as uuidv4 } from 'uuid'
-import Role from '~/Models/Schemas/Role.schema'
 
+import { Request } from 'express'
+import path from 'path'
+import sharp from 'sharp'
+import { UPLOAD_DRI } from '~/Constants/dir'
+import { getNameFullName, handlerUploadImage } from '~/Utils/file'
+import fs from 'fs'
+import { isProduction } from '~/Constants/config'
+import { config } from 'dotenv'
 class UsersService {
   private signAccessToken(user_id: string) {
     return signToken({
@@ -61,7 +67,8 @@ class UsersService {
         _id: user_id,
         email_verify_token,
         date_of_birth: new Date(payload.date_of_birth),
-        password: hashPassword(payload.password)
+        password: hashPassword(payload.password),
+        role: RoleType.customr
       })
     )
     // const user_id = result.insertedId.toString()
@@ -69,9 +76,7 @@ class UsersService {
     await databaseservice.reFreshToken.insertOne(
       new ResFreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
     )
-    await databaseservice.role.insertOne(
-      new Role({ user_id: new ObjectId(user_id), _id: new ObjectId(), name: RoleType.Admin })
-    )
+    // await databaseservice.role.insertOne(new Role({ _id_role: new ObjectId(), name: RoleType.Admin }))
     console.log('email_verify_token: ', email_verify_token)
     return {
       accsess_token,
@@ -103,6 +108,44 @@ class UsersService {
     // return [user, address]
     return { ...userPromise, address: addressPromise }
   }
+  async allMeTable() {
+    const userPromise = await databaseservice.users
+      .find(
+        {},
+        {
+          projection: {
+            password: 0,
+            email_verify_token: 0,
+            forgot_password_token: 0,
+            date_of_birth: 0,
+            verify: 0,
+            bio: 0
+          }
+        }
+      )
+      .toArray()
+    if (userPromise.length === 0) {
+      return 'Không có dữ liệu người dùng'
+    }
+    return [...userPromise]
+  }
+  async deleteUser(user_id: string) {
+    const deletedUser = await databaseservice.users.findOneAndDelete({ _id: new ObjectId(user_id) })
+    console.log(deletedUser)
+    await databaseservice.reFreshToken.deleteMany({ user_id: new ObjectId(user_id) })
+    if (deletedUser) {
+      return {
+        message: 'Xóa thông tin user thành công',
+        status: HTTP_STATUS.OK
+      }
+    } else {
+      return {
+        message: 'Không tìm thấy người dùng',
+        status: HTTP_STATUS.NOT_FOUND
+      }
+    }
+  }
+
   // async getMe(user_id: string) {
   //   const user = await databaseservice.users
   //     .aggregate([
@@ -128,21 +171,21 @@ class UsersService {
   //       }
   //     ])
   //     .next()
-
   //   console.log(user)
   //   return user
   // }
-
   async login(user_id: string) {
     const [accsess_token, refresh_token] = await this.signAccsessAndResfreshToken(user_id)
     const user = await databaseservice.users.findOne({ _id: new ObjectId(user_id) })
-    //console.log(user)
+    console.log(user)
     await databaseservice.reFreshToken.insertOne(
       new ResFreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
     )
+
     return {
       accsess_token,
       refresh_token,
+      _id: user?._id,
       name: user?.name,
       email: user?.email
     }
@@ -236,6 +279,16 @@ class UsersService {
       }
     })
   }
+  // async handleUploadSingImage(req: Request) {
+  //   const file = await handlerUploadImage(req)
+  //   const newName = getNameFullName(file.newFilename)
+  //   const newPath = path.resolve(UPLOAD_DRI, `${newName}.jpg`)
+  //   await sharp(file.filepath).jpeg({ quality: 50 }).toFile(newPath) // whith metadata là dữ liệu tên hình ảnh cũ lên tìm shrap
+  //   fs.unlinkSync(file.filepath) // xóa file thư mục image
+  //   return isProduction
+  //     ? `${process.env.HOST}/imageMedias/${newName}.jpg`
+  //     : `http://localhost:${process.env.PORT}/imageMedias/${newName}.jpg`
+  // }
   async updateMe(user_id: string, payload: CreateAddress, payloadUser?: UpdateMeReqBody) {
     const userUpdate = await databaseservice.users.findOneAndUpdate(
       {
@@ -245,7 +298,8 @@ class UsersService {
         $set: {
           ...(payloadUser && {
             name: payloadUser?.name,
-            phone: payloadUser?.phone
+            phone: payloadUser?.phone,
+            avatar: payloadUser?.avatar
           })
         },
         $currentDate: {
@@ -277,36 +331,35 @@ class UsersService {
         returnDocument: 'after'
       }
     )
-    console.log(userUpdate)
+
     return {
       name: userUpdate?.name,
       maUser: address?._id,
-      phone: address?.phone,
       province: address?.province,
       district: address?.district,
       award: address?.award,
       detail: address?.detail
     }
   }
-  private async updateUser(user_id: string, payload: UpdateMeReqBody) {
-    const user = await databaseservice.users.findOneAndUpdate(
-      {
-        user_id: new ObjectId(user_id)
-      },
-      {
-        $set: {
-          ...payload
-        },
-        $currentDate: {
-          updated_at: true
-        }
-      },
-      {
-        returnDocument: 'after'
-      }
-    )
-    return user
-  }
+  // private async updateUser(user_id: string, payload: UpdateMeReqBody) {
+  //   const user = await databaseservice.users.findOneAndUpdate(
+  //     {
+  //       user_id: new ObjectId(user_id)
+  //     },
+  //     {
+  //       $set: {
+  //         ...payload
+  //       },
+  //       $currentDate: {
+  //         updated_at: true
+  //       }
+  //     },
+  //     {
+  //       returnDocument: 'after'
+  //     }
+  //   )
+  //   return user
+  // }
   async checkRole(role: string) {
     if (role == 'user' || role == 'shop') {
       return true
@@ -317,6 +370,61 @@ class UsersService {
     const address = await databaseservice.address.findOne({ user_id: new ObjectId(user_id) })
     console.log(address)
     return address
+  }
+  async searchUser(payload: SearchRequestBody, user_id?: string) {
+    const firstLetter = payload.name // Lấy chữ cái đầu tiên
+    const regexPattern = `^${firstLetter}.+` // Tạo mẫu biểu thức chính quy
+    const regex = new RegExp(regexPattern, 'i')
+    console.log(firstLetter)
+    const searchResults = await databaseservice.users
+      .aggregate([
+        { $match: { $text: { $search: payload.name } } },
+        {
+          $lookup: {
+            from: 'address',
+            localField: '_id',
+            foreignField: 'user_id',
+            as: 'address'
+          }
+        },
+        {
+          $unwind: {
+            path: '$address',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $project: {
+            password: 0,
+            email_verify_token: 0,
+            forgot_password_token: 0,
+            date_of_birth: 0,
+            verify: 0,
+            bio: 0,
+            'address.user_id': 0
+          }
+        }
+        // {
+        //   $group: {
+        //     _id: '$_id',
+        //     name: { $first: '$name' },
+        //     email: { $first: '$email' },
+        //     created_at: { $first: '$created_at' },
+        //     updated_at: { $first: '$updated_at' },
+        //     avatar: { $first: '$avatar' },
+        //     cover_photo: { $first: '$cover_photo' },
+        //     code: { $first: '$code' },
+        //     phone: { $first: '$phone' },
+        //     role: { $first: '$role' },
+        //     address: { $first: '$address' }
+        //   }
+        // }
+      ])
+      .toArray()
+    if (searchResults.length === 0) {
+      return []
+    }
+    return searchResults
   }
   // async checkRole(role: string) {
   //   if (role != 'user' && role != 'shop') {

@@ -66,10 +66,9 @@ export const loginValidator = validate(
             minUppercase: 1,
             minNumbers: 1,
             minSymbols: 1
-          },
-
-          errorMessage: 'Password không đúng'
-        }
+          }
+        },
+        errorMessage: 'Bạn chưa nhập password'
       }
     },
     ['body']
@@ -83,11 +82,11 @@ export const registerVadidator = validate(
         isString: true,
         isLength: {
           options: {
-            min: 1,
+            min: 2,
             max: 100
           }
         },
-        errorMessage: 'lỗi name'
+        errorMessage: 'Lỗi chiều dài name bắt buộc 2-50 ký tự'
       },
       email: {
         notEmpty: true,
@@ -114,7 +113,7 @@ export const registerVadidator = validate(
             min: 6,
             max: 50
           },
-          errorMessage: 'Lỗi độ dài password'
+          errorMessage: 'Lỗi độ dài password phải từ 6-50 ký tự'
         },
         isStrongPassword: {
           options: {
@@ -124,7 +123,7 @@ export const registerVadidator = validate(
             minNumbers: 1,
             minSymbols: 1
           },
-          errorMessage: 'lỗi định dạng password'
+          errorMessage: 'lỗi định dạng password thiếu ký tự in hoa, số và ký tự đặc biệt'
         }
       },
       confirm_password: {
@@ -135,7 +134,7 @@ export const registerVadidator = validate(
             min: 6,
             max: 50
           },
-          errorMessage: 'Lỗi độ dài password'
+          errorMessage: 'Lỗi độ dài password phải từ 6-50 ký tự'
         },
         isStrongPassword: {
           options: {
@@ -145,7 +144,7 @@ export const registerVadidator = validate(
             minNumbers: 1,
             minSymbols: 1
           },
-          errorMessage: 'lỗi định dạng password'
+          errorMessage: 'lỗi định dạng password thiếu ký tự in hoa, số và ký tự đặc biệt'
         },
         custom: {
           options: (value, { req }) => {
@@ -243,7 +242,7 @@ export const refreshTokenValidator = validate(
               ])
               if (refresh_token == null) {
                 throw new ErrorWithStatus({
-                  message: USERS_MESSAGES.VALIDATION_ERROR_EMAIL,
+                  message: USERS_MESSAGES.VALIDATION_ERROR_REFRESHTOKEN,
                   status: HTTP_STATUS.UNAUTHORIZED
                 })
               }
@@ -325,64 +324,65 @@ export const updateAdressValidator = validate(
   checkSchema(
     {
       name: {
-        notEmpty: true,
-        isString: true,
+        // notEmpty: true,
+        // isString: true,
         isLength: {
           options: {
-            min: 1,
+            min: 2,
             max: 50
           }
         },
-        errorMessage: USERS_MESSAGES.VALIDATION_ERROR_NAME_USER
+        errorMessage: USERS_MESSAGES.VALIDATION_ERROR_NAME_USER,
+        trim: true
       },
       province: {
-        notEmpty: true,
-        isString: true,
+        // notEmpty: true,
+        // isString: true,
         isLength: {
           options: {
-            min: 1,
+            min: 0,
             max: 50
           }
         },
-        errorMessage: 'Lỗi độ dài của provice',
+        errorMessage: 'Lỗi độ dài hoặc không hợp lệ của provice',
+        trim: true
+      },
+      district: {
+        // notEmpty: true,
+        // isString: true,
+        isLength: {
+          options: {
+            min: 0,
+            max: 50
+          }
+        },
+        errorMessage: 'Lỗi độ dài hoặc không hợp lệ của district',
+        trim: true
+      },
+      award: {
+        // notEmpty: true,
+        // isString: true,
+        isLength: {
+          options: {
+            min: 0,
+            max: 50
+          }
+        },
+        errorMessage: 'Lỗi độ dài hoặc không hợp lệ của award',
+        trim: true
+      },
+      detail: {
+        // notEmpty: true,
+        // isString: true,
+        isLength: {
+          options: {
+            min: 0,
+            max: 50
+          }
+        },
+        errorMessage: 'Lỗi độ dài hoặc không hợp lệ của detail',
         trim: true
       }
-      // district: {
-      //   notEmpty: true,
-      //   isString: true,
-      //   isLength: {
-      //     options: {
-      //       min: 1,
-      //       max: 50
-      //     }
-      //   },
-      //   errorMessage: 'Lỗi độ dài của district',
-      //   trim: true
-      // },
-      // award: {
-      //   notEmpty: true,
-      //   isString: true,
-      //   isLength: {
-      //     options: {
-      //       min: 0,
-      //       max: 50
-      //     }
-      //   },
-      //   errorMessage: 'Lỗi độ dài của award',
-      //   trim: true
-      // },
-      // detail: {
-      //   notEmpty: true,
-      //   isString: true,
-      //   isLength: {
-      //     options: {
-      //       min: 0,
-      //       max: 50
-      //     },
-      //     errorMessage: 'Lỗi độ dài của detail'
-      //   },
-      //   trim: true
-      // }
     },
     ['body']
   )

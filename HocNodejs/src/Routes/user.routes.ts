@@ -10,6 +10,8 @@ import {
   updateAdressValidator
 } from '~/Middlewares/user.middeleware'
 import {
+  allMeProfileController,
+  deleteUserController,
   emailVerifyController,
   forgotPasswordController,
   loginController,
@@ -17,10 +19,12 @@ import {
   meProfileController,
   registerController,
   resendEmailVerifyController,
+  searchUserController,
   updateMeController
 } from '~/Controllers/user.controller'
 
 import { wrapRequestHandler } from '~/Utils/handlers'
+
 const userRoutes = express.Router()
 /**
  * Description . login user
@@ -35,6 +39,10 @@ userRoutes.post('/verify-email', emailVerifyTokenValidator, wrapRequestHandler(e
 userRoutes.post('/resend-verify-email', accsessTokenValidator, wrapRequestHandler(resendEmailVerifyController))
 userRoutes.post('/forgot-password', forgotPassWordValidator, wrapRequestHandler(forgotPasswordController))
 userRoutes.get('/me-profile', accsessTokenValidator, wrapRequestHandler(meProfileController))
-userRoutes.patch('/updateMe', accsessTokenValidator, updateAdressValidator, wrapRequestHandler(updateMeController))
+userRoutes.get('/admin-profile', wrapRequestHandler(meProfileController))
 
+userRoutes.patch('/updateMe', accsessTokenValidator, updateAdressValidator, wrapRequestHandler(updateMeController))
+userRoutes.get('/allmetable-profile', wrapRequestHandler(allMeProfileController))
+userRoutes.post('/deleteUser', wrapRequestHandler(deleteUserController))
+userRoutes.post('/search-user', wrapRequestHandler(searchUserController))
 export default userRoutes
